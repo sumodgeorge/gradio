@@ -89,6 +89,21 @@ jobs:
           name: website-json-${{ steps.pr_details.outputs.pr_number }}
           path: |
             ./js/_website/src/lib/json
+  lite-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install dependencies
+        id: install_deps
+        uses: "./.github/actions/install-all-deps"
+        with:
+          always-install-pnpm: true
+      - run: pnpm exec playwright install chromium
+      - run: python -m pip install build
+      - run: pnpm --filter @gradio/client build
+      - run: pnpm --filter @gradio/wasm build
+      - run: pnpm --filter @gradio/app pybuild
+      - run: pnpm --filter @gradio/app test:browser:lite
   deploy_to_vercel:
     uses: "./.github/workflows/deploy-website.yml"
     needs:  functional-test
