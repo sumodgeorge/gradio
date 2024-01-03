@@ -4,6 +4,7 @@ This file defines two useful high-level abstractions to build Gradio apps: Inter
 
 from __future__ import annotations
 
+import copy
 import inspect
 import json
 import os
@@ -28,7 +29,7 @@ from gradio.data_classes import InterfaceTypes
 from gradio.events import Events, on
 from gradio.exceptions import RenderError
 from gradio.flagging import CSVLogger, FlaggingCallback, FlagMethod
-from gradio.layouts import Column, Row, Tab, Tabs
+from gradio.layouts import Accordion, Column, Row, Tab, Tabs
 from gradio.pipelines import load_from_pipeline
 from gradio.themes import ThemeClass as Theme
 
@@ -92,8 +93,8 @@ class Interface(Blocks):
     def __init__(
         self,
         fn: Callable,
-        inputs: str | Component | list[str | Component] | None,
-        outputs: str | Component | list[str | Component] | None,
+        inputs: str | Component | list[str | Component] | Accordion | None,
+        outputs: str | Component | list[str | Component] | Accordion | None,
         examples: list[Any] | list[list[Any]] | str | None = None,
         cache_examples: bool | None = None,
         examples_per_page: int = 10,
@@ -169,6 +170,39 @@ class Interface(Blocks):
             inputs = [inputs]
         if not isinstance(outputs, list):
             outputs = [outputs]
+
+        inputs_ = copy.deepcopy(inputs)
+        inputs = []
+        input_accordions: list[Accordion] = []
+        input_accordion_indices: list[int | None] = []
+        for input in inputs_:
+            if isinstance(input, Accordion):
+                input.unrender()
+                input_accordions.append(input)
+                inputs.extend(input.components)
+                input_accordion_indices.extend([len(input_accordions)-1] * len(input.components))
+            else:
+                inputs.append(input)
+                input_accordion_indices.append(None)
+        self.input_accordions = input_accordions
+        self.input_accordion_indices = input_accordion_indices
+        print(self.input_accordion_indices, self.input_accordions, inputs)
+
+        outputs_ = copy.deepcopy(outputs)
+        outputs = []
+        output_accordions: list[Accordion] = []
+        output_accordion_indices: list[int | None] = []
+        for output in outputs_:
+            if isinstance(output, Accordion):
+                output.unrender()
+                output_accordions.append(output)
+                outputs.extend(output.components)
+                output_accordion_indices.extend([len(output_accordions)] * len(output.components))
+            else:
+                outputs.append(output)
+                output_accordion_indices.append(None)
+        self.output_accordions = output_accordions
+        self.output_accordion_indices = output_accordion_indices
 
         if self.space_id and cache_examples is None:
             self.cache_examples = True
@@ -442,8 +476,19 @@ class Interface(Blocks):
         with Column(variant="panel"):
             input_component_column = Column()
             with input_component_column:
-                for component in self.input_components:
-                    component.render()
+                for index, component in enumerate(self.input_components):
+                    accordion_index = self.input_accordion_indices[index]
+                    if accordion_index is None:
+                        component.render()
+                    else:
+                        accordion = self.input_accordions[accordion_index]
+                        if not accordion.is_rendered:
+                            accordion.render()
+                            accordion.__enter__()
+                        component.render()
+                        if index == len(self.input_components) - 1 or accordion_index != self.input_accordion_indices[index+1]:
+                            accordion.__exit__()
+
             with Row():
                 if self.interface_type in [
                     InterfaceTypes.STANDARD,
