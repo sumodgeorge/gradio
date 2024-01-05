@@ -246,7 +246,11 @@ def test_interface_adds_stop_button(interface_type, live, use_generator):
 
 def test_interface_with_accordions():
     def image_generator(textbox, slider, checkbox):
-        return "http://www.marketingtool.online/en/face-generator/img/faces/avatar-1151ce9f4b2043de0d2e3b7826127998.jpg", slider, checkbox
+        return (
+            "http://www.marketingtool.online/en/face-generator/img/faces/avatar-1151ce9f4b2043de0d2e3b7826127998.jpg",
+            slider,
+            checkbox,
+        )
 
     t = Textbox()
     s1 = Slider(minimum=1, maximum=10)
@@ -255,24 +259,24 @@ def test_interface_with_accordions():
     c2 = Checkbox(label="Noise reduction")
     i = Image()
     demo = Interface(
-        fn=image_generator, 
-        inputs=[
-            t,
-            Accordion("Advanced Options", 
-            components=[s1, c1])
-        ],
-        outputs=[
-            i,
-            Accordion("Options Used", open=False,
-            components=[s2, c2])
-        ]
+        fn=image_generator,
+        inputs=[t, Accordion("Advanced Options", components=[s1, c1])],
+        outputs=[i, Accordion("Options Used", open=False, components=[s2, c2])],
     )
 
     assert demo.input_components == [t, s1, c1]
     assert demo.output_components == [i, s2, c2]
-    accordion1 = next(block for block in demo.blocks.values() if isinstance(block, Accordion) and block.label == "Advanced Options")
+    accordion1 = next(
+        block
+        for block in demo.blocks.values()
+        if isinstance(block, Accordion) and block.label == "Advanced Options"
+    )
     assert accordion1.open
     assert accordion1.children[0].children == [s1, c1]
-    accordion2 = next(block for block in demo.blocks.values() if isinstance(block, Accordion) and block.label == "Options Used")
+    accordion2 = next(
+        block
+        for block in demo.blocks.values()
+        if isinstance(block, Accordion) and block.label == "Options Used"
+    )
     assert not accordion2.open
     assert accordion2.children[0].children == [s2, c2]
