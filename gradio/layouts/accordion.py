@@ -17,10 +17,25 @@ set_documentation_group("layout")
 @document()
 class Accordion(BlockContext, metaclass=ComponentMeta):
     """
-    Accordion is a layout element which can be toggled to show/hide the contained content.
-    Example:
-        with gr.Accordion("See Details"):
-            gr.Markdown("lorem ipsum")
+    Accordion is a layout element which can be toggled to show/hide the contained content. You can use an Accordion
+    in two ways: as a context manager, or as a component. As a context manager, you define the components inside the
+    accordion by indenting them. As a component, you can pass in a list of components to be rendered inside the
+    accordion using the `components` parameter, which makes it possible to use accordions with `gr.Interface`.
+    Example: (Blocks)
+        with gr.Blocks() as demo: 
+            with gr.Accordion("See Details"):
+                gr.Markdown("lorem ipsum")
+    Example: (Interface)
+        demo = gr.Interface(
+            fn=image_generator, 
+            inputs=[gr.Textbox(),
+                gr.Accordion("Advanced Options", 
+                components=[
+                    gr.Slider(minimum=1, maximum=10), 
+                    gr.Checkbox(label="Noise reduction")
+                ])
+            ],
+            outputs=gr.Image())
     """
 
     EVENTS = []

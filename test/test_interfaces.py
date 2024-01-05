@@ -177,7 +177,6 @@ class TestInterface:
         Interface(fn=str, inputs=t, outputs=Textbox())
         assert t.label == "input 0"
 
-
 class TestTabbedInterface:
     def test_tabbed_interface_config_matches_manual_tab(self):
         interface1 = Interface(lambda x: x, "textbox", "textbox")
