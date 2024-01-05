@@ -529,26 +529,24 @@ class Interface(Blocks):
         )
 
         with Column(variant="panel"):
-            for component in self.output_components:
-                for index, component in enumerate(self.output_components):
-                    accordion_index = self.output_accordion_indices[index]
-                    if accordion_index is None:
-                        if not isinstance(component, State):
-                            component.render()
-                    else:
-                        accordion = self.output_accordions[accordion_index]
-                        if not accordion.is_rendered:
-                            accordion.children = []  # Otherwise, the children components will be rendered twice
-                            accordion.render()
-                            accordion.__enter__()
-                        if not isinstance(component, State):
-                            component.render()
-                        if (
-                            index == len(self.output_components) - 1
-                            or accordion_index
-                            != self.output_accordion_indices[index + 1]
-                        ):
-                            accordion.__exit__()
+            for index, component in enumerate(self.output_components):
+                accordion_index = self.output_accordion_indices[index]
+                if accordion_index is None:
+                    if not isinstance(component, State):
+                        component.render()
+                else:
+                    accordion = self.output_accordions[accordion_index]
+                    if not accordion.is_rendered:
+                        accordion.children = []  # Otherwise, the children components will be rendered twice
+                        accordion.render()
+                        accordion.__enter__()
+                    if not isinstance(component, State):
+                        component.render()
+                    if (
+                        index == len(self.output_components) - 1
+                        or accordion_index != self.output_accordion_indices[index + 1]
+                    ):
+                        accordion.__exit__()
             with Row():
                 if self.interface_type == InterfaceTypes.OUTPUT_ONLY:
                     clear_btn = ClearButton()
@@ -794,21 +792,21 @@ class Interface(Blocks):
         self, components: list[Component | str | Accordion]
     ) -> tuple[list[Component | str], list[Accordion], list[int | None]]:
         components_ = []
-        input_accordions: list[Accordion] = []
-        input_accordion_indices: list[int | None] = []
+        accordions: list[Accordion] = []
+        accordion_indices: list[int | None] = []
         for element in components:
             if isinstance(element, Accordion):
                 element.unrender()
-                input_accordions.append(element)
+                accordions.append(element)
                 [c.unrender() for c in element.components]
                 components_.extend(element.components)
-                input_accordion_indices.extend(
-                    [len(input_accordions) - 1] * len(element.components)
+                accordion_indices.extend(
+                    [len(accordions) - 1] * len(element.components)
                 )
             else:
                 components_.append(element)
-                input_accordion_indices.append(None)
-        return components_, input_accordions, input_accordion_indices
+                accordion_indices.append(None)
+        return components_, accordions, accordion_indices
 
     def __str__(self):
         return self.__repr__()
