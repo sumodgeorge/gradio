@@ -34,7 +34,7 @@ class Accordion(BlockContext, metaclass=ComponentMeta):
         elem_id: str | None = None,
         elem_classes: list[str] | str | None = None,
         render: bool = True,
-        components: str | Component | list[Component | str] | None = None
+        components: str | Component | list[Component | str] | None = None,
     ):
         """
         Parameters:
@@ -55,9 +55,13 @@ class Accordion(BlockContext, metaclass=ComponentMeta):
         elif isinstance(components, (Component, str)):
             self.components = [get_component_instance(components, unrender=True)]
         elif isinstance(components, list):
-            self.components = [get_component_instance(comp, unrender=True) for comp in components]
+            self.components = [
+                get_component_instance(comp, unrender=True) for comp in components
+            ]
         else:
-            raise ValueError("The parameter to `components` must be a Component or list of Components")
+            raise ValueError(
+                "The parameter to `components` must be a Component or list of Components"
+            )
         BlockContext.__init__(
             self,
             visible=visible,

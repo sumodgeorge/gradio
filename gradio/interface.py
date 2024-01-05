@@ -4,7 +4,6 @@ This file defines two useful high-level abstractions to build Gradio apps: Inter
 
 from __future__ import annotations
 
-import copy
 import inspect
 import json
 import os
@@ -93,8 +92,8 @@ class Interface(Blocks):
     def __init__(
         self,
         fn: Callable,
-        inputs: str | Component | list[str | Component] | Accordion | None,
-        outputs: str | Component | list[str | Component] | Accordion | None,
+        inputs: str | Component | list[str | Component | Accordion] | Accordion | None,
+        outputs: str | Component | list[str | Component | Accordion] | Accordion | None,
         examples: list[Any] | list[list[Any]] | str | None = None,
         cache_examples: bool | None = None,
         examples_per_page: int = 10,
@@ -163,46 +162,24 @@ class Interface(Blocks):
             inputs = []
             self.interface_type = InterfaceTypes.OUTPUT_ONLY
 
-        assert isinstance(inputs, (str, list, Component))
-        assert isinstance(outputs, (str, list, Component))
+        assert isinstance(inputs, (str, list, Accordion, Component))
+        assert isinstance(outputs, (str, list, Accordion, Component))
 
         if not isinstance(inputs, list):
             inputs = [inputs]
         if not isinstance(outputs, list):
             outputs = [outputs]
 
-        inputs_ = copy.deepcopy(inputs)
-        inputs = []
-        input_accordions: list[Accordion] = []
-        input_accordion_indices: list[int | None] = []
-        for input in inputs_:
-            if isinstance(input, Accordion):
-                input.unrender()
-                input_accordions.append(input)
-                inputs.extend(input.components)
-                input_accordion_indices.extend([len(input_accordions)-1] * len(input.components))
-            else:
-                inputs.append(input)
-                input_accordion_indices.append(None)
-        self.input_accordions = input_accordions
-        self.input_accordion_indices = input_accordion_indices
-        print(self.input_accordion_indices, self.input_accordions, inputs)
-
-        outputs_ = copy.deepcopy(outputs)
-        outputs = []
-        output_accordions: list[Accordion] = []
-        output_accordion_indices: list[int | None] = []
-        for output in outputs_:
-            if isinstance(output, Accordion):
-                output.unrender()
-                output_accordions.append(output)
-                outputs.extend(output.components)
-                output_accordion_indices.extend([len(output_accordions)] * len(output.components))
-            else:
-                outputs.append(output)
-                output_accordion_indices.append(None)
-        self.output_accordions = output_accordions
-        self.output_accordion_indices = output_accordion_indices
+        (
+            inputs_,
+            self.input_accordions,
+            self.input_accordion_indices,
+        ) = self._extract_accordion_components(inputs)
+        (
+            outputs_,
+            self.output_accordions,
+            self.output_accordion_indices,
+        ) = self._extract_accordion_components(outputs)
 
         if self.space_id and cache_examples is None:
             self.cache_examples = True
@@ -210,10 +187,12 @@ class Interface(Blocks):
             self.cache_examples = cache_examples or False
 
         state_input_indexes = [
-            idx for idx, i in enumerate(inputs) if i == "state" or isinstance(i, State)
+            idx for idx, i in enumerate(inputs_) if i == "state" or isinstance(i, State)
         ]
         state_output_indexes = [
-            idx for idx, o in enumerate(outputs) if o == "state" or isinstance(o, State)
+            idx
+            for idx, o in enumerate(outputs_)
+            if o == "state" or isinstance(o, State)
         ]
 
         if len(state_input_indexes) == 0 and len(state_output_indexes) == 0:
@@ -225,14 +204,14 @@ class Interface(Blocks):
         else:
             state_input_index = state_input_indexes[0]
             state_output_index = state_output_indexes[0]
-            if inputs[state_input_index] == "state":
+            if inputs_[state_input_index] == "state":
                 default = utils.get_default_args(fn)[state_input_index]
                 state_variable = State(value=default)  # type: ignore
             else:
-                state_variable = inputs[state_input_index]
+                state_variable = inputs_[state_input_index]
 
-            inputs[state_input_index] = state_variable
-            outputs[state_output_index] = state_variable
+            inputs_[state_input_index] = state_variable
+            outputs_[state_output_index] = state_variable
 
             if cache_examples:
                 warnings.warn(
@@ -243,11 +222,11 @@ class Interface(Blocks):
 
         self.input_components = [
             get_component_instance(i, unrender=True)
-            for i in inputs  # type: ignore
+            for i in inputs_  # type: ignore
         ]
         self.output_components = [
             get_component_instance(o, unrender=True)
-            for o in outputs  # type: ignore
+            for o in outputs_  # type: ignore
         ]
 
         for component in self.input_components + self.output_components:
@@ -483,10 +462,15 @@ class Interface(Blocks):
                     else:
                         accordion = self.input_accordions[accordion_index]
                         if not accordion.is_rendered:
+                            accordion.children = []  # Otherwise, the children components will be rendered twice
                             accordion.render()
                             accordion.__enter__()
                         component.render()
-                        if index == len(self.input_components) - 1 or accordion_index != self.input_accordion_indices[index+1]:
+                        if (
+                            index == len(self.input_components) - 1
+                            or accordion_index
+                            != self.input_accordion_indices[index + 1]
+                        ):
                             accordion.__exit__()
 
             with Row():
@@ -546,8 +530,25 @@ class Interface(Blocks):
 
         with Column(variant="panel"):
             for component in self.output_components:
-                if not (isinstance(component, State)):
-                    component.render()
+                for index, component in enumerate(self.output_components):
+                    accordion_index = self.output_accordion_indices[index]
+                    if accordion_index is None:
+                        if not isinstance(component, State):
+                            component.render()
+                    else:
+                        accordion = self.output_accordions[accordion_index]
+                        if not accordion.is_rendered:
+                            accordion.children = []  # Otherwise, the children components will be rendered twice
+                            accordion.render()
+                            accordion.__enter__()
+                        if not isinstance(component, State):
+                            component.render()
+                        if (
+                            index == len(self.output_components) - 1
+                            or accordion_index
+                            != self.output_accordion_indices[index + 1]
+                        ):
+                            accordion.__exit__()
             with Row():
                 if self.interface_type == InterfaceTypes.OUTPUT_ONLY:
                     clear_btn = ClearButton()
@@ -788,6 +789,26 @@ class Interface(Blocks):
                 _api_mode=self.api_mode,
                 batch=self.batch,
             )
+
+    def _extract_accordion_components(
+        self, components: list[Component | str | Accordion]
+    ) -> tuple[list[Component | str], list[Accordion], list[int | None]]:
+        components_ = []
+        input_accordions: list[Accordion] = []
+        input_accordion_indices: list[int | None] = []
+        for element in components:
+            if isinstance(element, Accordion):
+                element.unrender()
+                input_accordions.append(element)
+                [c.unrender() for c in element.components]
+                components_.extend(element.components)
+                input_accordion_indices.extend(
+                    [len(input_accordions) - 1] * len(element.components)
+                )
+            else:
+                components_.append(element)
+                input_accordion_indices.append(None)
+        return components_, input_accordions, input_accordion_indices
 
     def __str__(self):
         return self.__repr__()
