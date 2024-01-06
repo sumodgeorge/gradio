@@ -1,31 +1,42 @@
 # @gradio/app
 
+## 1.19.1
+
+### Patch Changes
+
+- Updated dependencies [[`640b7fe`](https://github.com/gradio-app/gradio/commit/640b7fe05276e11720b4341cadf088491395e53d)]:
+  - @gradio/image@0.6.1
+  - @gradio/imageeditor@0.2.3
+  - @gradio/video@0.3.1
+  - @gradio/chatbot@0.6.1
+  - @gradio/gallery@0.4.17
+
 ## 1.19.0
 
 ### Features
 
-- [#6778](https://github.com/gradio-app/gradio/pull/6778) [`8a093e2`](https://github.com/gradio-app/gradio/commit/8a093e23d7993a044e5e0ff73f93a74cb75dad56) - Add a dev instruction for lite in SharedWorker mode.  Thanks [@whitphx](https://github.com/whitphx)!
+- [#6778](https://github.com/gradio-app/gradio/pull/6778) [`8a093e2`](https://github.com/gradio-app/gradio/commit/8a093e23d7993a044e5e0ff73f93a74cb75dad56) - Add a dev instruction for lite in SharedWorker mode. Thanks [@whitphx](https://github.com/whitphx)!
 
 ## 1.18.0
 
 ### Features
 
-- [#6839](https://github.com/gradio-app/gradio/pull/6839) [`e974cf0`](https://github.com/gradio-app/gradio/commit/e974cf045c82ce8d79efdda36b9dbf6ea557baa4) - Custom JS Guide.  Thanks [@dawoodkhan82](https://github.com/dawoodkhan82)!
+- [#6839](https://github.com/gradio-app/gradio/pull/6839) [`e974cf0`](https://github.com/gradio-app/gradio/commit/e974cf045c82ce8d79efdda36b9dbf6ea557baa4) - Custom JS Guide. Thanks [@dawoodkhan82](https://github.com/dawoodkhan82)!
 
 ### Fixes
 
-- [#6863](https://github.com/gradio-app/gradio/pull/6863) [`d406855`](https://github.com/gradio-app/gradio/commit/d4068557953746662235d595ec435c42ceb24414) - Fix JS Client when app is running behind a proxy.  Thanks [@freddyaboulton](https://github.com/freddyaboulton)!
-- [#6846](https://github.com/gradio-app/gradio/pull/6846) [`48d6534`](https://github.com/gradio-app/gradio/commit/48d6534b40f80e7e70a4061f97d9f2e23ba77fe1) - Add `show_api` parameter to events, and fix `gr.load()`. Also makes some minor improvements to the "view API" page when running on Spaces.  Thanks [@abidlabs](https://github.com/abidlabs)!
+- [#6863](https://github.com/gradio-app/gradio/pull/6863) [`d406855`](https://github.com/gradio-app/gradio/commit/d4068557953746662235d595ec435c42ceb24414) - Fix JS Client when app is running behind a proxy. Thanks [@freddyaboulton](https://github.com/freddyaboulton)!
+- [#6846](https://github.com/gradio-app/gradio/pull/6846) [`48d6534`](https://github.com/gradio-app/gradio/commit/48d6534b40f80e7e70a4061f97d9f2e23ba77fe1) - Add `show_api` parameter to events, and fix `gr.load()`. Also makes some minor improvements to the "view API" page when running on Spaces. Thanks [@abidlabs](https://github.com/abidlabs)!
 
 ## 1.17.0
 
 ### Features
 
-- [#6831](https://github.com/gradio-app/gradio/pull/6831) [`f3abde8`](https://github.com/gradio-app/gradio/commit/f3abde80884d96ad69b825020c46486d9dd5cac5) - Add an option to enable header links for markdown.  Thanks [@pngwn](https://github.com/pngwn)!
+- [#6831](https://github.com/gradio-app/gradio/pull/6831) [`f3abde8`](https://github.com/gradio-app/gradio/commit/f3abde80884d96ad69b825020c46486d9dd5cac5) - Add an option to enable header links for markdown. Thanks [@pngwn](https://github.com/pngwn)!
 
 ### Fixes
 
-- [#6766](https://github.com/gradio-app/gradio/pull/6766) [`73268ee`](https://github.com/gradio-app/gradio/commit/73268ee2e39f23ebdd1e927cb49b8d79c4b9a144) - Improve source selection UX.  Thanks [@hannahblair](https://github.com/hannahblair)!
+- [#6766](https://github.com/gradio-app/gradio/pull/6766) [`73268ee`](https://github.com/gradio-app/gradio/commit/73268ee2e39f23ebdd1e927cb49b8d79c4b9a144) - Improve source selection UX. Thanks [@hannahblair](https://github.com/hannahblair)!
 
 ## 1.16.2
 
